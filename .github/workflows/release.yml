@@ -48,7 +48,7 @@ jobs:
       - name: Checkout Mono Repo
         uses: actions/checkout@v4
         with:
-          repository: astriaorg/charts
+          repository: astriaorg/charts-release-test
           ref: 'main'
           path: 'charts'
           token: ${{ secrets.CHARTS_REPO_TOKEN }}
