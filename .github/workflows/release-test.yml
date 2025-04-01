@@ -1,0 +1,145 @@
+name: Release Test
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+        - main
+
+env:
+  REPO_NAME: astriaorg/astria-release-test
+  CHARTS_REPO: astriaorg/charts-release-test
+
+jobs:
+  run_checker:
+    uses: ./.github/workflows/reusable-run-checker.yml
+
+  proto:
+    runs-on: ubuntu-latest
+    environment: BUF
+    needs: run_checker
+    if: |
+      github.event_name != 'merge_group' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) &&
+      needs.run_checker.outputs.run_release_proto == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: "1.32.0"
+          github_token: ${{ github.token }}
+      - name: "Get Buf Branch Annotation"
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "buf_repo_ending=${{ github.event.number }}/merge" >> $GITHUB_ENV
+          else
+            echo "buf_repo_ending=main" >> $GITHUB_ENV
+          fi
+      - name: "Upload all Protos"
+        uses: bufbuild/buf-push-action@v1
+        with:
+          draft: ${{ github.ref_name != 'main'}}
+          buf_token: ${{ secrets.BUF_TOKEN }}
+
+  charts:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs: run_checker
+    if: github.ref_name == 'main' && needs.run_checker.outputs.run_release_charts == 'true'
+    steps:
+      - name: Checkout Mono Repo
+        uses: actions/checkout@v4
+        with:
+          path: 'mono'
+      - name: Checkout Mono Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CHARTS_REPO }}
+          ref: 'main'
+          path: 'charts'
+          token: ${{ secrets.CHARTS_REPO_TOKEN }}
+      - name: Copy Updates to Charts Repo
+        run: |
+          rsync -a --delete mono/charts/ charts/charts/ --exclude=charts/README.md
+          rsync -a --delete mono/charts/README.md charts/README.md
+          rsync -a --delete mono/dev/ charts/dev/
+      - name: Publish to Charts Repo
+        run: |
+          cd charts
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+          git add .
+          git commit -m "Changes from ${{ env.REPO_NAME }}@${{ github.sha }}"
+          git push
+
+  conductor:
+    needs: run_checker
+    if: needs.run_checker.outputs.run_release_services == 'true'
+    uses: ./.github/workflows/reusable-release-cargo.yml
+    with:
+      package-name: 'conductor'
+      display-name: 'Conductor'
+      suffix: release-test
+
+  composer:
+    needs: run_checker
+    if: needs.run_checker.outputs.run_release_services == 'true'
+    uses: ./.github/workflows/reusable-release-cargo.yml
+    with:
+      package-name: 'composer'
+      display-name: 'Composer'
+      suffix: release-test
+
+  sequencer:
+    needs: run_checker
+    if: needs.run_checker.outputs.run_release_services == 'true'
+    uses: ./.github/workflows/reusable-release-cargo.yml
+    with:
+      package-name: 'sequencer'
+      display-name: 'Sequencer'
+      suffix: release-test
+
+  sequencer-relayer:
+    needs: run_checker
+    if: needs.run_checker.outputs.run_release_services == 'true'
+    uses: ./.github/workflows/reusable-release-cargo.yml
+    with:
+      package-name: 'sequencer-relayer'
+      display-name: 'Sequencer Relayer'
+      suffix: release-test
+
+  bridge-withdrawer:
+    needs: run_checker
+    if: needs.run_checker.outputs.run_release_services == 'true'
+    uses: ./.github/workflows/reusable-release-cargo.yml
+    with:
+      package-name: 'bridge-withdrawer'
+      display-name: 'EVM Bridge Withdrawer'
+      suffix: release-test
+
+  auctioneer:
+    needs: run_checker
+    if: needs.run_checker.outputs.run_release_services == 'true'
+    uses: ./.github/workflows/reusable-release-cargo.yml
+    with:
+      package-name: 'auctioneer'
+      display-name: 'Auctioneer'
+      suffix: release-test
+
+  cli:
+    needs: run_checker
+    if: needs.run_checker.outputs.run_release_services == 'true'
+    uses: ./.github/workflows/reusable-release-cargo.yml
+    with:
+      package-name: 'cli'
+      display-name: 'CLI'
+      suffix: release-test
+
+  release:
+    needs: [proto, conductor, composer, sequencer, sequencer-relayer, cli, bridge-withdrawer, auctioneer]
+    if: ${{ always() && !cancelled() }}
+    uses: ./.github/workflows/reusable-success.yml
+    with:
+      success: ${{ !contains(needs.*.result, 'failure') }}

@@ -9,11 +9,15 @@ on:
       display-name:
         required: true
         type: string
+      suffix:
+        required: false
+        type: string
+        default: ""
 
 jobs:
   rust-version-release:
     runs-on: ubuntu-latest
-    outputs: 
+    outputs:
       release-cut: ${{ steps.output.outputs.release_cut }}
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +27,7 @@ jobs:
         uses: joroshiba/version-check@v2
         with:
           file: ${{ format('crates/astria-{0}/Cargo.toml', inputs.package-name) }}
-          tagFormat: ${{ format('{0}-v${{version}}', inputs.package-name) }}
+          tagFormat: ${{ format('{0}{1}-v${{version}}', inputs.package-name, inputs.suffix != '' && format('-{0}', inputs.suffix) || '') }}
           failBuild: false
       # Notice appears when the version has changed on a PR to main
       - name: Release Notice
@@ -33,7 +37,7 @@ jobs:
           github.base_ref == 'main'
         run: |
           FILE="${{ format('crates/astria-{0}/Cargo.toml', inputs.package-name) }}"
-          TITLE="New ${{ inputs.display-name}} Release"
+          TITLE="New ${{ inputs.display-name }}${{ inputs.suffix != '' && format(' ({0})', inputs.suffix) || '' }} Release"
           MESSAGE=("This PR updates the version of ${{ inputs.package-name }}."
                    "After merging a new release ${{steps.release_version.outputs.rawVersion}}"
                    "will be created with tag ${{ steps.release_version.outputs.releaseVersion }}."
@@ -50,6 +54,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.release_version.outputs.releaseVersion }}
-          release_name: ${{ inputs.display-name }} ${{ steps.release_version.outputs.rawVersion }}
+          release_name: ${{ format('{0}{1} {2}', inputs.display-name, inputs.suffix != '' && format(' ({0})', inputs.suffix) || '', steps.release_version.outputs.rawVersion) }}
           draft: true
           prerelease: true
