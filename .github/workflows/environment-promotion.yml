@@ -1,0 +1,233 @@
+name: Environment Promotion
+
+# Global variables
+env:
+  # Controls how many commits to fetch when checking out the repository
+  # This is optimized to keep checkouts fast while ensuring we have enough history
+  # to find the relevant tags for environment promotions
+  GIT_FETCH_DEPTH: 50
+  # Number of characters to use for shortened git commit hashes
+  # 8 characters is typically enough to ensure uniqueness while keeping hashes readable
+  GIT_HASH_LENGTH: 8
+  # Charts repository where deployment manifests are stored
+  CHARTS_REPO: astriaorg/charts-release-test
+
+on:
+  # Tag-based promotion
+  push:
+    tags:
+      - 'devnet/v*'
+      - 'testnet/v*'
+      - 'mainnet/v*'
+
+  # Manual trigger for promotions
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - promote-to-devnet
+          - promote-to-testnet
+          - promote-to-mainnet
+      version:
+        description: 'Version to tag (e.g., v1.2.3)'
+        required: true
+        type: string
+      commit_sha:
+        description: 'Specific commit SHA to promote (defaults to latest build from previous environment)'
+        required: false
+        type: string
+
+# Limit permissions to minimum required
+permissions:
+  contents: write  # For tagging
+  id-token: write  # For authenticating to cloud providers
+
+jobs:
+  # Security check for event source and pull request forks
+  security_check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false }}
+    steps:
+      - run: echo "Security check passed - this is a push event or the pull request is from the same repository"
+
+  # Determine commit to promote for DevNet
+  determine-devnet-commit:
+    needs: security_check
+    if: |
+      needs.security_check.outputs.should_run &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/devnet/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'promote-to-devnet'))
+    uses: ./.github/workflows/reusable-determine-commit.yml
+    with:
+      environment: 'devnet'
+      commit_sha: ${{ github.event.inputs.commit_sha }}
+      version: ${{ github.event.inputs.version }}
+
+  # Sync charts for DevNet
+  sync-devnet-charts:
+    needs: determine-devnet-commit
+    if: |
+      needs.security_check.outputs.should_run &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/devnet/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'promote-to-devnet'))
+    uses: ./.github/workflows/reusable-sync-charts.yml
+    with:
+      environment: 'devnet'
+      commit_sha: ${{ needs.determine-devnet-commit.outputs.commit_sha }}
+      version: ${{ needs.determine-devnet-commit.outputs.version }}
+      charts_repo: 'astriaorg/charts-release-test'
+    secrets:
+      CHARTS_REPO_TOKEN: ${{ secrets.CHARTS_REPO_TOKEN }}
+
+  # Promote to DevNet (via tag or manual trigger)
+  promote-to-devnet:
+    needs: [determine-devnet-commit, sync-devnet-charts]
+    if: |
+      needs.security_check.outputs.should_run &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/devnet/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'promote-to-devnet'))
+    runs-on: ubuntu-latest
+    environment: devnet
+    steps:
+      - name: Run DevNet Verification Tests
+        run: |
+          # Add your DevNet verification tests here
+          echo "Running verification tests for DevNet"
+
+  # Determine commit to promote for TestNet
+  determine-testnet-commit:
+    needs: security_check
+    if: |
+      needs.security_check.outputs.should_run == 'true' &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/testnet/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'promote-to-testnet'))
+    uses: ./.github/workflows/reusable-determine-commit.yml
+    with:
+      environment: 'testnet'
+      commit_sha: ${{ github.event.inputs.commit_sha }}
+      version: ${{ github.event.inputs.version }}
+
+  # Sync charts for TestNet
+  sync-testnet-charts:
+    needs: determine-testnet-commit
+    if: |
+      needs.security_check.outputs.should_run == 'true' &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/testnet/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'promote-to-testnet'))
+    uses: ./.github/workflows/reusable-sync-charts.yml
+    with:
+      environment: 'testnet'
+      commit_sha: ${{ needs.determine-testnet-commit.outputs.commit_sha }}
+      version: ${{ needs.determine-testnet-commit.outputs.version }}
+      charts_repo: 'astriaorg/charts-release-test'
+    secrets:
+      CHARTS_REPO_TOKEN: ${{ secrets.CHARTS_REPO_TOKEN }}
+
+  # Promote to TestNet (via tag or manual trigger)
+  promote-to-testnet:
+    needs: [determine-testnet-commit, sync-testnet-charts]
+    if: |
+      needs.security_check.outputs.should_run == 'true' &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/testnet/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'promote-to-testnet'))
+    runs-on: ubuntu-latest
+    environment: testnet
+    steps:
+      - name: Run TestNet Verification Tests
+        run: |
+          # Add TestNet verification tests here
+          echo "Running verification tests for TestNet"
+
+  # Determine commit to promote for MainNet
+  determine-mainnet-commit:
+    needs: security_check
+    if: |
+      needs.security_check.outputs.should_run == 'true' &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/mainnet/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'promote-to-mainnet'))
+    uses: ./.github/workflows/reusable-determine-commit.yml
+    with:
+      environment: 'mainnet'
+      commit_sha: ${{ github.event.inputs.commit_sha }}
+      version: ${{ github.event.inputs.version }}
+
+  # Sync charts for MainNet
+  sync-mainnet-charts:
+    needs: determine-mainnet-commit
+    if: |
+      needs.security_check.outputs.should_run == 'true' &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/mainnet/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'promote-to-mainnet'))
+    uses: ./.github/workflows/reusable-sync-charts.yml
+    with:
+      environment: 'mainnet'
+      commit_sha: ${{ needs.determine-mainnet-commit.outputs.commit_sha }}
+      version: ${{ needs.determine-mainnet-commit.outputs.version }}
+      charts_repo: 'astriaorg/charts-release-test'
+    secrets:
+      CHARTS_REPO_TOKEN: ${{ secrets.CHARTS_REPO_TOKEN }}
+
+  # Promote to MainNet (via tag or manual trigger)
+  promote-to-mainnet:
+    needs: [determine-mainnet-commit, sync-mainnet-charts]
+    if: |
+      needs.security_check.outputs.should_run == 'true' &&
+      ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/mainnet/')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'promote-to-mainnet'))
+    runs-on: ubuntu-latest
+    environment: mainnet
+    steps:
+      - name: Run MainNet Verification Tests
+        run: |
+          # Add MainNet verification tests here
+          echo "Running verification tests for MainNet"
+
+      # Create GitHub Release similar to release-please
+      - name: Create GitHub Release
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const version = "${{ needs.determine-mainnet-commit.outputs.version }}";
+            const commit = "${{ needs.determine-mainnet-commit.outputs.commit_sha }}";
+
+            // Create a release with information from all components
+            const releaseData = {
+              tag_name: `release/${version}`,
+              name: `Release ${version}`,
+              body: `
+              # Release ${version}
+
+              This release has been deployed to MainNet.
+
+              ## Components
+
+              The following components have been deployed with commit SHA ${commit}:
+
+              - Composer
+              - Conductor
+              - Sequencer
+              - Sequencer Relayer
+              - Bridge Withdrawer
+              - CLI
+
+              See CHANGELOG.md for details on what's included in this release.
+              `,
+              draft: false,
+              prerelease: false
+            };
+
+            console.log('Creating release:', releaseData);
+
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ...releaseData
+            });
+
+            console.log('Release created:', release.data.html_url);

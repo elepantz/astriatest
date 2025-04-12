@@ -1,0 +1,110 @@
+name: Reusable Charts Sync Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment (devnet, testnet, or mainnet)'
+        required: true
+        type: string
+      commit_sha:
+        description: 'Short commit SHA to use for image tags'
+        required: true
+        type: string
+      version:
+        description: 'Version string for documentation and tagging'
+        required: true
+        type: string
+      charts_repo:
+        description: 'GitHub repository where charts are stored'
+        required: true
+        type: string
+    secrets:
+      CHARTS_REPO_TOKEN:
+        description: 'GitHub token with access to the charts repository'
+        required: true
+
+jobs:
+  sync-charts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Mono Repo
+        uses: actions/checkout@v4
+        with:
+          path: 'mono'
+          fetch-depth: 1
+
+      - name: Checkout Charts Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.charts_repo }}
+          ref: 'main'
+          path: 'charts'
+          token: ${{ secrets.CHARTS_REPO_TOKEN }}
+
+      # Create or update the values file with the commit SHA
+      - name: Update ${{ inputs.environment }} Values
+        run: |
+          COMMIT_SHA="${{ inputs.commit_sha }}"
+          VERSION="${{ inputs.version }}"
+          ENVIRONMENT="${{ inputs.environment }}"
+
+          # Create the values directory if it doesn't exist
+          mkdir -p charts/values
+
+          # Create or update the values file with environment-specific configuration
+          cat > charts/values/values-$ENVIRONMENT.yaml <<EOF
+          # $ENVIRONMENT configuration - version $VERSION (commit sha-$COMMIT_SHA)
+          # Updated by GitHub Actions on $(date)
+
+          global:
+            environment: $ENVIRONMENT
+
+          images:
+            composer:
+              tag: sha-$COMMIT_SHA
+            conductor:
+              tag: sha-$COMMIT_SHA
+            sequencer:
+              tag: sha-$COMMIT_SHA
+            sequencer-relayer:
+              tag: sha-$COMMIT_SHA
+            bridge-withdrawer:
+              tag: sha-$COMMIT_SHA
+            cli:
+              tag: sha-$COMMIT_SHA
+          EOF
+
+          echo "Updated values-$ENVIRONMENT.yaml with commit SHA $COMMIT_SHA"
+
+      # Copy updated charts and values to the charts repo
+      - name: Sync Charts and Values to Charts Repo
+        run: |
+          # Copy all charts from mono repo to charts repo
+          rsync -a --delete mono/charts/ charts/charts/ --exclude=charts/README.md
+
+          # Copy README if it exists
+          if [ -f mono/charts/README.md ]; then
+            rsync -a --delete mono/charts/README.md charts/README.md
+          fi
+
+          # Copy any other necessary files (e.g., dev configs)
+          if [ -d mono/dev ]; then
+            rsync -a --delete mono/dev/ charts/dev/
+          fi
+
+      # Commit and push changes to the charts repo
+      - name: Publish ${{ inputs.environment }} Changes to Charts Repo
+        run: |
+          cd charts
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add .
+
+          # Try to commit and handle case where there might be no changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "${{ inputs.environment }} Promotion - ${{ inputs.version }} (sha-${{ inputs.commit_sha }})"
+            git push
+          fi

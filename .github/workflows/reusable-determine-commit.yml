@@ -1,0 +1,126 @@
+name: Reusable Determine Commit Workflow
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment (devnet, testnet, or mainnet)'
+        required: true
+        type: string
+      version:
+        description: 'Version to tag (e.g., v1.2.3) - only needed for manual triggers'
+        required: false
+        type: string
+        default: ""
+      commit_sha:
+        description: 'Specific commit SHA to promote - only needed for manual triggers'
+        required: false
+        type: string
+        default: ""
+    outputs:
+      commit_sha:
+        description: 'Shortened commit SHA to use for deployments'
+        value: ${{ jobs.determine-commit.outputs.commit_sha }}
+      full_commit_sha:
+        description: 'Full commit SHA'
+        value: ${{ jobs.determine-commit.outputs.full_commit_sha }}
+      version:
+        description: 'Version string in format major.minor.patch-shortened_git_sha1'
+        value: ${{ jobs.determine-commit.outputs.version }}
+
+jobs:
+  determine-commit:
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.determine_commit.outputs.COMMIT_SHA }}
+      full_commit_sha: ${{ steps.determine_commit.outputs.FULL_COMMIT_SHA }}
+      version: ${{ steps.determine_commit.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+          fetch-tags: true
+
+      - name: Determine commit to promote
+        id: determine_commit
+        run: |
+          # Configure Git hash length - 8 characters is typically enough for uniqueness
+          GIT_HASH_LENGTH=8
+
+          # Set source and target environments
+          TARGET_ENV="${{ inputs.environment }}"
+
+          # SOURCE_ENV represents the environment we're promoting FROM
+          # TARGET_ENV represents the environment we're promoting TO
+          # This follows the promotion flow: dev -> devnet -> testnet -> mainnet
+          if [[ "$TARGET_ENV" == "devnet" ]]; then
+            SOURCE_ENV="dev"
+          elif [[ "$TARGET_ENV" == "testnet" ]]; then
+            SOURCE_ENV="devnet"
+          elif [[ "$TARGET_ENV" == "mainnet" ]]; then
+            SOURCE_ENV="testnet"
+          else
+            echo "Unknown environment: $TARGET_ENV"
+            exit 1
+          fi
+
+          # Determine if this is a tag push event by checking GitHub context
+          IS_TAG_PUSH=false
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" && "${{ github.ref_name }}" == $TARGET_ENV/* ]]; then
+            # This is definitely a tag push event, not a branch push
+            IS_TAG_PUSH=true
+            echo "Detected tag push event for ${{ github.ref_name }}"
+          fi
+
+          if [[ "$IS_TAG_PUSH" == "true" ]]; then
+            # For tag-based trigger, get the commit the tag points to
+            FULL_COMMIT_SHA=$(git rev-parse ${{ github.ref_name }})
+            COMMIT_SHA=$(git rev-parse --short=$GIT_HASH_LENGTH ${{ github.ref_name }})
+
+            # Extract version from tag name (e.g., devnet/v1.2.3 -> v1.2.3)
+            BASE_VERSION="${{ github.ref_name }}"
+            BASE_VERSION="${BASE_VERSION#$TARGET_ENV/}"
+
+            # Generate version in format major.minor.patch-shortened_git_sha1
+            # Example: If tag is devnet/v1.2.3 and commit is abcd1234, VERSION becomes 1.2.3-abcd1234
+            VERSION="${BASE_VERSION#v}-${COMMIT_SHA}"
+          else
+            # For manual trigger, use the provided commit or latest tag from source environment
+            if [[ -n "${{ inputs.commit_sha }}" ]]; then
+              FULL_COMMIT_SHA="${{ inputs.commit_sha }}"
+              COMMIT_SHA=$(git rev-parse --short=$GIT_HASH_LENGTH $FULL_COMMIT_SHA)
+            else
+              # Get the latest tag from source environment and its commit
+              LATEST_TAG=$(git tag -l "$SOURCE_ENV/*" --sort=-creatordate | head -n 1)
+              if [[ -z "$LATEST_TAG" ]]; then
+                echo "No $SOURCE_ENV tag found. Please specify a commit SHA."
+                exit 1
+              fi
+              FULL_COMMIT_SHA=$(git rev-list -n 1 $LATEST_TAG)
+              COMMIT_SHA=$(git rev-parse --short=$GIT_HASH_LENGTH $FULL_COMMIT_SHA)
+
+              # Extract the version from the source tag as a reference
+              echo "Source tag: $LATEST_TAG with commit: $COMMIT_SHA"
+            fi
+
+            # For manual trigger, use the provided version but ensure it follows our format
+            BASE_VERSION="${{ inputs.version }}"
+            BASE_VERSION="${BASE_VERSION#v}" # Remove v prefix if present
+
+            # Generate version in format major.minor.patch-shortened_git_sha1
+            VERSION="${BASE_VERSION}-${COMMIT_SHA}"
+
+            # Create a new tag for this commit in the target environment (e.g., devnet/v1.2.3)
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            TAG_NAME="$TARGET_ENV/v${BASE_VERSION}"
+            git tag -a $TAG_NAME -m "$TARGET_ENV promotion" $FULL_COMMIT_SHA
+            git push origin $TAG_NAME
+
+            echo "Created tag $TAG_NAME for commit $COMMIT_SHA"
+          fi
+
+          echo "COMMIT_SHA=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "FULL_COMMIT_SHA=$FULL_COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Promoting commit $COMMIT_SHA to $TARGET_ENV with version $VERSION (format: major.minor.patch-shortened_git_sha1)"
