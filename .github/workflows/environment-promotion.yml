@@ -79,7 +79,6 @@ jobs:
       environment: 'devnet'
       commit_sha: ${{ needs.determine-devnet-commit.outputs.commit_sha }}
       version: ${{ needs.determine-devnet-commit.outputs.version }}
-      charts_repo: 'astriaorg/charts-release-test'
     secrets:
       CHARTS_REPO_TOKEN: ${{ secrets.CHARTS_REPO_TOKEN }}
 
@@ -123,7 +122,6 @@ jobs:
       environment: 'testnet'
       commit_sha: ${{ needs.determine-testnet-commit.outputs.commit_sha }}
       version: ${{ needs.determine-testnet-commit.outputs.version }}
-      charts_repo: 'astriaorg/charts-release-test'
     secrets:
       CHARTS_REPO_TOKEN: ${{ secrets.CHARTS_REPO_TOKEN }}
 
@@ -167,7 +165,6 @@ jobs:
       environment: 'mainnet'
       commit_sha: ${{ needs.determine-mainnet-commit.outputs.commit_sha }}
       version: ${{ needs.determine-mainnet-commit.outputs.version }}
-      charts_repo: 'astriaorg/charts-release-test'
     secrets:
       CHARTS_REPO_TOKEN: ${{ secrets.CHARTS_REPO_TOKEN }}
 

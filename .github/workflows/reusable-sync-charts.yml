@@ -15,14 +15,17 @@ on:
         description: 'Version string for documentation and tagging'
         required: true
         type: string
-      charts_repo:
-        description: 'GitHub repository where charts are stored'
-        required: true
-        type: string
     secrets:
+      # Note: The CHARTS_REPO_TOKEN secret is still required from the calling workflow
+      # For complete encapsulation, you could replace this with a GitHub App token or
+      # other token with proper repo access permissions directly in this workflow
       CHARTS_REPO_TOKEN:
         description: 'GitHub token with access to the charts repository'
         required: true
+
+env:
+  # Charts repository where deployment manifests are stored
+  CHARTS_REPO: "astriaorg/charts-release-test"
 
 jobs:
   sync-charts:
@@ -37,7 +40,7 @@ jobs:
       - name: Checkout Charts Repo
         uses: actions/checkout@v4
         with:
-          repository: ${{ inputs.charts_repo }}
+          repository: ${{ env.CHARTS_REPO }}
           ref: 'main'
           path: 'charts'
           token: ${{ secrets.CHARTS_REPO_TOKEN }}
