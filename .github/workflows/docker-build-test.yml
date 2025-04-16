@@ -340,40 +340,33 @@ jobs:
           TAG=sha-$(git rev-parse --short HEAD)
           just ibc-test run-timeout $TAG
 
-  docker:
-    if: ${{ always() && !cancelled() }}
-    needs: [auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund]
-    uses: ./.github/workflows/reusable-success.yml
-    with:
-      success: ${{ !contains(needs.*.result, 'failure') }}
-
-  # This job creates dev/* tags for successful builds on main branch
-  # These tags are essential for the environment promotion workflow (.github/workflows/environment-promotion.yml)
-  # The promotion path is: dev -> devnet -> testnet -> mainnet
-  # When promoting to devnet, the workflow looks for the latest dev/* tag
-  # without this job, there would be no dev/* tags to find when promoting to devnet
-  deploy-to-dev:
-    needs: [smoke-test, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund]
+  # Store commit info for downstream workflows
+  store-commit-info:
     if: |
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
       !contains(needs.*.result, 'failure')
+    needs: [auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Save commit SHA
+        run: echo "${{ github.sha }}" > commit-sha.txt
+
+      - name: Upload commit info as artifact
+        uses: actions/upload-artifact@v3
         with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: commit-sha-${{ github.run_id }}
+          path: commit-sha.txt
+          retention-days: 30
 
-      - name: Tag successful Dev deployment
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+  # Final job to report overall success/failure
+  docker:
+    if: ${{ always() && !cancelled() }}
+    needs: [auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund, store-commit-info]
+    uses: ./.github/workflows/reusable-success.yml
+    with:
+      success: ${{ !contains(needs.*.result, 'failure') }}
 
-          # Create a dev tag for this commit
-          # This tag format (dev/timestamp) is recognized by the environment-promotion workflow
-          # as the source for promotions to devnet
-          CURRENT_DATE=$(date +%Y%m%d%H%M%S)
-          git tag -a dev/$CURRENT_DATE -m "Dev deployment from ${{ github.sha }}"
-          git push origin dev/$CURRENT_DATE
-          echo "Created tag dev/$CURRENT_DATE for commit ${{ github.sha }}"
+  # The deploy-to-dev job has been migrated to a separate workflow file:
+  # .github/workflows/deploy-to-dev.yml
+  # It runs when this workflow completes successfully using the workflow_run trigger
