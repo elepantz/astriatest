@@ -241,7 +241,7 @@ jobs:
     if: |
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == true) &&
       (github.event_name == 'merge_group' || needs.run_checker.outputs.run_docker == 'true')
-    runs-on: depot-ubuntu-24.04-8
+    runs-on: depot-ubuntu-24.04-16
     steps:
       - uses: actions/checkout@v4
       - name: Install just
@@ -276,7 +276,7 @@ jobs:
     if: |
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == true) &&
       (github.event_name == 'merge_group' || needs.run_checker.outputs.run_docker == 'true')
-    runs-on: depot-ubuntu-24.04-8
+    runs-on: depot-ubuntu-24.04-16
     steps:
       - uses: actions/checkout@v4
       - name: Install just
@@ -311,7 +311,7 @@ jobs:
     if: |
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == true) &&
       (github.event_name == 'merge_group' || needs.run_checker.outputs.run_docker == 'true')
-    runs-on: depot-ubuntu-24.04-8
+    runs-on: depot-ubuntu-24.04-16
     steps:
       - uses: actions/checkout@v4
       - name: Install just
