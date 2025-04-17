@@ -263,12 +263,12 @@ jobs:
           just deploy cluster
           kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
           echo -e "\n\nDeploying with astria images tagged $TAG"
-          just ibc-test deploy $TAG
+          just deploy ibc-test $TAG
       - name: Run IBC ICS20 Transfer test
         timeout-minutes: 3
         run: |
           TAG=sha-$(git rev-parse --short HEAD)
-          just ibc-test run $TAG
+          just run ibc-test default $TAG
 
   ibc-no-native-asset-test:
     needs: [ run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli ]
@@ -298,12 +298,12 @@ jobs:
           just deploy cluster
           kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
           echo -e "\n\nDeploying with astria images tagged $TAG"
-          just ibc-test deploy-without-native $TAG
+          just deploy ibc-test-without-native $TAG
       - name: Run IBC utia as native test
         timeout-minutes: 3
         run: |
           TAG=sha-$(git rev-parse --short HEAD)
-          just ibc-test run-without-native $TAG
+          just run ibc-test without-native $TAG
 
   ibc-timeout-refund:
     needs: [ run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli ]
@@ -333,12 +333,12 @@ jobs:
           just deploy cluster
           kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
           echo -e "\n\nDeploying with astria images tagged $TAG"
-          just ibc-test deploy-timeout $TAG
+          just deploy ibc-test-timeout-refund $TAG
       - name: Run IBC ICS20 Transfer test
         timeout-minutes: 3
         run: |
           TAG=sha-$(git rev-parse --short HEAD)
-          just ibc-test run-timeout $TAG
+          just run ibc-test timeout-refund $TAG
 
   # Store commit info for downstream workflows
   store-commit-info:
