@@ -10,7 +10,7 @@ _default_release:
 
 # Check for required dependencies
 _check_dependencies:
-  #!/usr/bin/env sh
+  #!/usr/bin/env bash
   set -eu
   if ! command -v yq >/dev/null 2>&1; then
     echo "Error: yq is not installed. Please install it first:"
@@ -28,8 +28,8 @@ defaultVersionType := "chart"
 defaultReleaseMessage := "Update component versions"
 
 # Base directory for charts
-CHARTS_DIR := "../../charts"
-VALUES_FILE := "{{CHARTS_DIR}}/values.yaml"
+CHARTS_DIR := "charts"
+VALUES_FILE := CHARTS_DIR + "/values.yaml"
 
 ########################
 ## Version Management ##
@@ -122,20 +122,22 @@ Usage:
   BUMP_TYPE can be: major, minor, patch
 ")]
 bump-version component=defaultComponent version_type=defaultVersionType bump_type="patch": _check_dependencies
-  @current_version=$(yq e ".global.versions.{{component}}.{{version_type}}" {{VALUES_FILE}})
-  @IFS='.' read -r major minor patch <<< "$$current_version"
-  @if [ "{{bump_type}}" = "major" ]; then \
-    new_version="$((major + 1)).0.0"; \
-  elif [ "{{bump_type}}" = "minor" ]; then \
-    new_version="$$major.$((minor + 1)).0"; \
-  elif [ "{{bump_type}}" = "patch" ]; then \
-    new_version="$$major.$$minor.$((patch + 1))"; \
-  else \
-    echo "Error: Invalid bump type. Use major, minor, or patch"; \
-    exit 1; \
+  #!/usr/bin/env bash
+  set -eu
+  current_version=$(yq e ".global.versions.{{component}}.{{version_type}}" {{VALUES_FILE}})
+  IFS='.' read -r major minor patch <<< "$current_version"
+  if [ "{{bump_type}}" = "major" ]; then
+    new_version="$((major + 1)).0.0"
+  elif [ "{{bump_type}}" = "minor" ]; then
+    new_version="$major.$((minor + 1)).0"
+  elif [ "{{bump_type}}" = "patch" ]; then
+    new_version="$major.$minor.$((patch + 1))"
+  else
+    echo "Error: Invalid bump type. Use major, minor, or patch"
+    exit 1
   fi
-  @yq e ".global.versions.{{component}}.{{version_type}} = \"$$new_version\"" -i {{VALUES_FILE}}
-  @echo "Bumped {{component}} {{version_type}} version from $$current_version to $$new_version"
+  yq e ".global.versions.{{component}}.{{version_type}} = \"$new_version\"" -i {{VALUES_FILE}}
+  echo "Bumped {{component}} {{version_type}} version from $current_version to $new_version"
 
 # Create Release Commit
 #####################
@@ -187,11 +189,14 @@ Usage:
   BUMP_TYPE can be: major, minor, patch
 ")]
 bump-all bump_type="patch": _check_dependencies
-  @for component in $(yq e '.global.versions | keys | .[]' {{VALUES_FILE}}); do \
-    just release bump-version $$component chart {{bump_type}}; \
-    just release bump-version $$component app {{bump_type}}; \
+  #!/usr/bin/env bash
+  set -eu
+  components=$(yq e '.global.versions | keys | .[]' {{VALUES_FILE}})
+  for component in $components; do
+    just release bump-version "$component" chart {{bump_type}}
+    just release bump-version "$component" app {{bump_type}}
   done
-  @echo "Bumped all component versions by {{bump_type}}"
+  echo "Bumped all component versions by {{bump_type}}"
 
 # Create Changelog
 #################
