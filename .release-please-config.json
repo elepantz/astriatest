@@ -66,7 +66,7 @@
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "plugins": [
-  "cargo-workspace"
+    "cargo-workspace"
   ],
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
@@ -74,41 +74,41 @@
   "include-component-in-tag": true,
   "tag-separator": "-v",
   "changelog-sections": [
-  {
-  "type": "feat",
-  "section": "Features",
-  "hidden": false
-  },
-  {
-  "type": "fix",
-  "section": "Bug Fixes",
-  "hidden": false
-  },
-  {
-  "type": "chore",
-  "section": "Miscellaneous",
-  "hidden": false
-  },
-  {
-  "type": "refactor",
-  "section": "Code Refactoring",
-  "hidden": false
-  },
-  {
-  "type": "docs",
-  "section": "Documentation",
-  "hidden": false
-  },
-  {
-  "type": "perf",
-  "section": "Performance Improvements",
-  "hidden": false
-  },
-  {
-  "type": "test",
-  "section": "Tests",
-  "hidden": false
-  }
+    {
+      "type": "feat",
+      "section": "Features",
+      "hidden": false
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes",
+      "hidden": false
+    },
+    {
+      "type": "chore",
+      "section": "Miscellaneous",
+      "hidden": false
+    },
+    {
+      "type": "refactor",
+      "section": "Code Refactoring",
+      "hidden": false
+    },
+    {
+      "type": "docs",
+      "section": "Documentation",
+      "hidden": false
+    },
+    {
+      "type": "perf",
+      "section": "Performance Improvements",
+      "hidden": false
+    },
+    {
+      "type": "test",
+      "section": "Tests",
+      "hidden": false
+    }
   ],
   "separate-pull-requests": true
-  }
+}

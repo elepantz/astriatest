@@ -387,7 +387,3 @@ jobs:
     uses: ./.github/workflows/reusable-success.yml
     with:
       success: ${{ !contains(needs.*.result, 'failure') }}
-
-  # The deploy-to-dev job has been migrated to a separate workflow file:
-  # .github/workflows/deploy-to-dev.yml
-  # It runs when this workflow completes successfully using the workflow_run trigger

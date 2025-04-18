@@ -36,11 +36,15 @@ jobs:
           else
             echo "buf_repo_ending=main" >> $GITHUB_ENV
           fi
-      - name: "Upload all Protos"
-        uses: bufbuild/buf-push-action@v1
-        with:
-          draft: ${{ github.ref_name != 'main'}}
-          buf_token: ${{ secrets.BUF_TOKEN }}
+      # ⚠️ TEMPORARY: BUF token upload disabled for testing
+      # TODO: Re-enable before merging to main
+      # - name: "Upload all Protos"
+      #   uses: bufbuild/buf-push-action@v1
+      #   with:
+      #     draft: ${{ github.ref_name != 'main'}}
+      #     buf_token: ${{ secrets.BUF_TOKEN }}
+      - name: "Skip BUF Upload (Temporarily Disabled)"
+        run: echo "BUF token upload temporarily disabled"
 
   charts:
     permissions:
