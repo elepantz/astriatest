@@ -1,0 +1,33 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
+      # Optionally trigger the build workflow when a new release is created
+      - name: Trigger build workflow for new releases
+        if: ${{ steps.release.outputs.releases_created }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const releasedComponents = JSON.parse('${{ steps.release.outputs.releases_created_json }}');
+            console.log('New releases created:', releasedComponents);
+
+            // The full tags are available in the releases_created_json output
+            // You can use these to trigger specific builds for each released component
