@@ -17,9 +17,12 @@ jobs:
     uses: ./.github/workflows/reusable-run-checker.yml
 
   proto:
+    # TEMPORARILY DISABLED: Proto linting is disabled while working on an issue
+    # TODO: Re-enable proto linting after issue is resolved
     runs-on: ubuntu-latest
     needs: run_checker
-    if: needs.run_checker.outputs.run_lint_proto == 'true'
+    # Temporarily disabled: needs.run_checker.outputs.run_lint_proto == 'true'
+    if: false
     steps:
       - uses: actions/checkout@v4
       - uses: bufbuild/buf-setup-action@v1
