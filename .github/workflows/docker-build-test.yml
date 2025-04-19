@@ -361,29 +361,10 @@ jobs:
       - name: Skip IBC Timeout Refund Test (Temporarily Disabled)
         run: echo "IBC Timeout Refund test temporarily disabled"
 
-  # Store commit info for downstream workflows
-  store-commit-info:
-    if: |
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      !contains(needs.*.result, 'failure')
-    needs: [auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Save commit SHA
-        run: echo "${{ github.sha }}" > commit-sha.txt
-
-      - name: Upload commit info as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: commit-sha-${{ github.run_id }}
-          path: commit-sha.txt
-          retention-days: 30
-
   # Final job to report overall success/failure
   docker:
     if: ${{ always() && !cancelled() }}
-    needs: [auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund, store-commit-info]
+    needs: [auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund]
     uses: ./.github/workflows/reusable-success.yml
     with:
       success: ${{ !contains(needs.*.result, 'failure') }}
