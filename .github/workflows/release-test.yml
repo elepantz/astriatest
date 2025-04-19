@@ -57,7 +57,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: 'mono'
-      - name: Checkout Mono Repo
+      - name: Checkout Charts Repo
         uses: actions/checkout@v4
         with:
           repository: ${{ env.CHARTS_REPO }}
