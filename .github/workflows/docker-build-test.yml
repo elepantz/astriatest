@@ -374,7 +374,7 @@ jobs:
         run: echo "${{ github.sha }}" > commit-sha.txt
 
       - name: Upload commit info as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: commit-sha-${{ github.run_id }}
           path: commit-sha.txt
