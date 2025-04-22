@@ -20,15 +20,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
-      # Optionally trigger the build workflow when a new release is created
-      - name: Trigger build workflow for new releases
+      - name: Debug release outputs
         if: ${{ steps.release.outputs.releases_created }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const releasedComponents = JSON.parse('${{ steps.release.outputs.releases_created_json }}');
-            console.log('New releases created:', releasedComponents);
-
-            // The full tags are available in the releases_created_json output
-            // You can use these to trigger specific builds for each released component
+            console.log('Release Please Action Outputs:');
+            console.log('---------------------------');
+            console.log('Releases Created:', '${{ steps.release.outputs.releases_created }}');
+            console.log('Paths Released:', '${{ steps.release.outputs.paths_released }}');
+            console.log('PRs Created:', '${{ steps.release.outputs.prs }}');
