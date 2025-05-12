@@ -48,8 +48,22 @@ jobs:
       contents: read
       id-token: write
       packages: write
-    if: inputs.force || startsWith(inputs.tag, inputs.binary-name) || !inputs.tag && (startsWith(github.ref, format('refs/tags/{0}-v', inputs.binary-name)) || github.ref == 'refs/heads/main' || github.event_name == 'pull_request' || github.event_name == 'merge_group')
+    #### REMOVEif: inputs.force || startsWith(inputs.tag, inputs.binary-name) || !inputs.tag && (startsWith(github.ref, format('refs/tags/{0}-v', inputs.binary-name)) || github.ref == 'refs/heads/main' || github.event_name == 'pull_request' || github.event_name == 'merge_group')
+    if: always()
     steps:
+      - name: Debug job-level if condition
+        run: |
+          echo "inputs.force: ${{ inputs.force }}"
+          echo "inputs.tag: '${{ inputs.tag }}'"
+          echo "inputs.binary-name: '${{ inputs.binary-name }}'"
+          echo "github.ref: '${{ github.ref }}'"
+          echo "github.event_name: '${{ github.event_name }}'"
+          echo "startsWith(inputs.tag, inputs.binary-name): ${{ startsWith(inputs.tag, inputs.binary-name) }}"
+          echo "!inputs.tag: ${{ !inputs.tag }}"
+          echo "startsWith(github.ref, '${{ format('refs/tags/{0}-v', inputs.binary-name) }}'): ${{ startsWith(github.ref, format('refs/tags/{0}-v', inputs.binary-name)) }}"
+          echo "github.ref == 'refs/heads/main': ${{ github.ref == 'refs/heads/main' }}"
+          echo "github.event_name == 'pull_request': ${{ github.event_name == 'pull_request' }}"
+          echo "github.event_name == 'merge_group': ${{ github.event_name == 'merge_group' }}"
       # Checking out the repo
       - uses: actions/checkout@v4
         with:
