@@ -44,135 +44,121 @@ jobs:
   auctioneer:
     needs: run_checker
     if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'auctioneer')
-    runs-on: ubuntu-latest
+    uses: "./.github/workflows/reusable-docker-build.yml"
     permissions:
       contents: read
       id-token: write
       packages: write
-    steps:
-      - uses: "./.github/workflows/reusable-docker-build.yml"
-        with:
-          depot-project-id: 0q41v32h7j
-          package-name: auctioneer
-          binary-name: auctioneer
-          tag: ${{ inputs.tag }}
-          force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'auctioneer' }}
-          image-suffix: release-test
-          secrets: inherit
+    with:
+      depot-project-id: 0q41v32h7j
+      package-name: auctioneer
+      binary-name: auctioneer
+      tag: ${{ inputs.tag }}
+      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'auctioneer' }}
+      image-suffix: release-test
+    secrets: inherit
 
   composer:
     needs: run_checker
     if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'composer')
-    runs-on: ubuntu-latest
+    uses: "./.github/workflows/reusable-docker-build.yml"
     permissions:
       contents: read
       id-token: write
       packages: write
-    steps:
-      - uses: "./.github/workflows/reusable-docker-build.yml"
-        with:
-          depot-project-id: 0q41v32h7j
-          package-name: composer
-          binary-name: composer
-          tag: ${{ inputs.tag }}
-          force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'composer' }}
-          image-suffix: release-test
-          secrets: inherit
+    with:
+      depot-project-id: 0q41v32h7j
+      package-name: composer
+      binary-name: composer
+      tag: ${{ inputs.tag }}
+      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'composer' }}
+      image-suffix: release-test
+    secrets: inherit
 
   conductor:
     needs: run_checker
     if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'conductor')
-    runs-on: ubuntu-latest
+    uses: "./.github/workflows/reusable-docker-build.yml"
     permissions:
       contents: read
       id-token: write
       packages: write
-    steps:
-      - uses: "./.github/workflows/reusable-docker-build.yml"
-        with:
-          depot-project-id: 0q41v32h7j
-          package-name: conductor
-          binary-name: conductor
-          tag: ${{ inputs.tag }}
-          force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'conductor' }}
-          image-suffix: release-test
-          secrets: inherit
+    with:
+      depot-project-id: 0q41v32h7j
+      package-name: conductor
+      binary-name: conductor
+      tag: ${{ inputs.tag }}
+      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'conductor' }}
+      image-suffix: release-test
+    secrets: inherit
 
   sequencer:
     needs: run_checker
     if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'sequencer')
-    runs-on: ubuntu-latest
+    uses: "./.github/workflows/reusable-docker-build.yml"
     permissions:
       contents: read
       id-token: write
       packages: write
-    steps:
-      - uses: "./.github/workflows/reusable-docker-build.yml"
-        with:
-          depot-project-id: 0q41v32h7j
-          package-name: sequencer
-          binary-name: sequencer
-          tag: ${{ inputs.tag }}
-          force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'sequencer' }}
-          image-suffix: release-test
-          secrets: inherit
+    with:
+      depot-project-id: 0q41v32h7j
+      package-name: sequencer
+      binary-name: sequencer
+      tag: ${{ inputs.tag }}
+      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'sequencer' }}
+      image-suffix: release-test
+    secrets: inherit
 
   sequencer-relayer:
     needs: run_checker
     if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'sequencer-relayer')
-    runs-on: ubuntu-latest
+    uses: "./.github/workflows/reusable-docker-build.yml"
     permissions:
       contents: read
       id-token: write
       packages: write
-    steps:
-      - uses: "./.github/workflows/reusable-docker-build.yml"
-        with:
-          depot-project-id: 0q41v32h7j
-          package-name: sequencer-relayer
-          binary-name: sequencer-relayer
-          tag: ${{ inputs.tag }}
-          force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'sequencer-relayer' }}
-          image-suffix: release-test
-          secrets: inherit
+    with:
+      depot-project-id: 0q41v32h7j
+      package-name: sequencer-relayer
+      binary-name: sequencer-relayer
+      tag: ${{ inputs.tag }}
+      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'sequencer-relayer' }}
+      image-suffix: release-test
+    secrets: inherit
 
   evm-bridge-withdrawer:
     needs: run_checker
     if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'evm-bridge-withdrawer')
-    runs-on: ubuntu-latest
+    uses: "./.github/workflows/reusable-docker-build.yml"
     permissions:
       contents: read
       id-token: write
       packages: write
-    steps:
-      - uses: "./.github/workflows/reusable-docker-build.yml"
-        with:
-          depot-project-id: 0q41v32h7j
-          package-name: evm-bridge-withdrawer
-          binary-name: bridge-withdrawer
-          tag: ${{ inputs.tag }}
-          force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'evm-bridge-withdrawer' }}
-          image-suffix: release-test
-          secrets: inherit
+    with:
+      depot-project-id: 0q41v32h7j
+      package-name: evm-bridge-withdrawer
+      binary-name: bridge-withdrawer
+      tag: ${{ inputs.tag }}
+      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'evm-bridge-withdrawer' }}
+      image-suffix: release-test
+    secrets: inherit
 
   cli:
     needs: run_checker
     if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'cli')
-    runs-on: ubuntu-latest
+    uses: "./.github/workflows/reusable-docker-build.yml"
     permissions:
       contents: read
       id-token: write
       packages: write
-    steps:
-      - uses: "./.github/workflows/reusable-docker-build.yml"
-        with:
-          depot-project-id: 0q41v32h7j
-          package-name: astria-cli
-          binary-name: cli
-          tag: ${{ inputs.tag }}
-          force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'cli' }}
-          image-suffix: release-test
-          secrets: inherit
+    with:
+      depot-project-id: 0q41v32h7j
+      package-name: astria-cli
+      binary-name: cli
+      tag: ${{ inputs.tag }}
+      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'cli' }}
+      image-suffix: release-test
+    secrets: inherit
 
   smoke-test:
     needs: [run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli]
