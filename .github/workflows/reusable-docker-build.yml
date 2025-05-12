@@ -50,6 +50,9 @@ jobs:
       packages: write
     if: inputs.force || startsWith(inputs.tag, inputs.binary-name) || !inputs.tag && (startsWith(github.ref, format('refs/tags/{0}-v', inputs.binary-name)) || github.ref == 'refs/heads/main' || github.event_name == 'pull_request' || github.event_name == 'merge_group')
     steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
@@ -59,9 +62,6 @@ jobs:
           EVENT_CONTEXT: ${{ toJSON(github.event) }}
         run: echo "$EVENT_CONTEXT"
       # Checking out the repo
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'true'
       - run: git fetch --all --tags
       # Use version-check to extract version from Cargo.toml if no tag is provided
       - name: Extract version from Cargo.toml
@@ -71,7 +71,6 @@ jobs:
         with:
           file: crates/astria-${{ inputs.package-name }}/Cargo.toml
           failBuild: false
-      # Combine tag resolution and cleaning into one step
       - name: Process tag
         id: process_tag
         run: |
