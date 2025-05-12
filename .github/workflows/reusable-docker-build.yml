@@ -67,7 +67,6 @@ jobs:
       # Checking out the repo
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
           submodules: 'true'
       - name: Dump GitHub context
         env:
