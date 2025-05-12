@@ -48,26 +48,8 @@ jobs:
       contents: read
       id-token: write
       packages: write
-    #### REMOVEif: inputs.force || startsWith(inputs.tag, inputs.binary-name) || !inputs.tag && (startsWith(github.ref, format('refs/tags/{0}-v', inputs.binary-name)) || github.ref == 'refs/heads/main' || github.event_name == 'pull_request' || github.event_name == 'merge_group')
-    if: always()
+    if: inputs.force || startsWith(inputs.tag, inputs.binary-name) || !inputs.tag && (startsWith(github.ref, format('refs/tags/{0}-v', inputs.binary-name)) || github.ref == 'refs/heads/main' || github.event_name == 'pull_request' || github.event_name == 'merge_group')
     steps:
-      - name: Debug job-level if condition
-        run: |
-          echo "inputs.force: ${{ inputs.force }}"
-          echo "inputs.tag: '${{ inputs.tag }}'"
-          echo "inputs.binary-name: '${{ inputs.binary-name }}'"
-          echo "github.ref: '${{ github.ref }}'"
-          echo "github.event_name: '${{ github.event_name }}'"
-          echo "startsWith(inputs.tag, inputs.binary-name): ${{ startsWith(inputs.tag, inputs.binary-name) }}"
-          echo "!inputs.tag: ${{ !inputs.tag }}"
-          echo "startsWith(github.ref, '${{ format('refs/tags/{0}-v', inputs.binary-name) }}'): ${{ startsWith(github.ref, format('refs/tags/{0}-v', inputs.binary-name)) }}"
-          echo "github.ref == 'refs/heads/main': ${{ github.ref == 'refs/heads/main' }}"
-          echo "github.event_name == 'pull_request': ${{ github.event_name == 'pull_request' }}"
-          echo "github.event_name == 'merge_group': ${{ github.event_name == 'merge_group' }}"
-      # Checking out the repo
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'true'
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
@@ -76,27 +58,42 @@ jobs:
         env:
           EVENT_CONTEXT: ${{ toJSON(github.event) }}
         run: echo "$EVENT_CONTEXT"
-      - name: Filter input tag
-        id: filter_input_tag
-        if: inputs.tag != ''
+      # Checking out the repo
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - run: git fetch --all --tags
+      # Use version-check to extract version from Cargo.toml if no tag is provided
+      - name: Extract version from Cargo.toml
+        id: version_check
+        if: inputs.tag == ''
+        uses: joroshiba/version-check@v2
+        with:
+          file: crates/astria-${{ inputs.package-name }}/Cargo.toml
+          failBuild: false
+      # Combine tag resolution and cleaning into one step
+      - name: Process tag
+        id: process_tag
         run: |
-          TAG="${{ inputs.tag }}"
+          # Determine the tag to use
+          if [ "${{ inputs.tag }}" != "" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${{ steps.version_check.outputs.releaseVersion }}"
+          fi
 
-          # Check if tag contains 'v' followed by a version number
+          # Clean the tag (strip leading v if present)
           if [[ "$TAG" =~ v([0-9]+\.[0-9]+\.[0-9]+.*) ]]; then
-            # Extract just the semver portion (everything after 'v')
             CLEAN_TAG=$(echo "$TAG" | sed -E 's/.*v([0-9]+\.[0-9]+\.[0-9]+.*)/\1/')
             echo "Converted tag from $TAG to $CLEAN_TAG"
           else
-            # Keep tag as is (might already be semver or 'latest')
             CLEAN_TAG="$TAG"
             echo "Using tag as is: $TAG"
           fi
 
           SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "clean_tag=$CLEAN_TAG" >> $GITHUB_OUTPUT
-
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
       - uses: depot/setup-action@v1
       - name: Login to Docker Hub
         # INFRA-APR-25: Temporary update to allow this step to run for pull requests from forked repositories
@@ -129,14 +126,14 @@ jobs:
             # Main branch builds: latest and main-sha
             type=raw,value=latest,enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
             type=raw,value=sha-${{ github.sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
-            type=raw,value=main-${{ steps.filter_input_tag.outputs.short_sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
+            type=raw,value=main-${{ steps.process_tag.outputs.short_sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
 
             # Release builds. Semver and match with version
             type=match,pattern=refs/tags/${{ inputs.binary-name }}-v(.*),group=1,enable=${{ startsWith(env.FULL_REF, 'refs/tags/') }},value=${{ env.FULL_REF }}
-            type=semver,pattern={{version}}-${{ steps.filter_input_tag.outputs.short_sha }},enable=${{ startsWith(env.FULL_REF, 'refs/tags/') && contains(env.FULL_REF, '-v') }}
+            type=semver,pattern={{version}}-${{ steps.process_tag.outputs.short_sha }},enable=${{ startsWith(env.FULL_REF, 'refs/tags/') && contains(env.FULL_REF, '-v') }}
 
             # Support direct version input via inputs.tag
-            type=raw,value=${{ steps.filter_input_tag.outputs.clean_tag }}-${{ steps.filter_input_tag.outputs.short_sha }},enable=${{ inputs.tag != '' && !startsWith(inputs.tag, 'refs/')}}
+            type=raw,value=${{ steps.process_tag.outputs.clean_tag }}-${{ steps.process_tag.outputs.short_sha }},enable=${{ inputs.tag != '' && !startsWith(inputs.tag, 'refs/')}}
 
       - name: Build and push
         uses: depot/build-push-action@v1
