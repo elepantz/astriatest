@@ -127,7 +127,7 @@ jobs:
             type=raw,value=sha-${{ github.event.pull_request.head.sha || github.sha }},enable=${{ startsWith(env.FULL_REF, 'refs/pull/') }}
 
             # Main branch builds: latest and main-sha
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' && inputs.tag == '' }}
+            type=raw,value=latest,enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
             type=raw,value=sha-${{ github.sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
             type=raw,value=main-${{ steps.filter_input_tag.outputs.short_sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
 
