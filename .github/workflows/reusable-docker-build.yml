@@ -61,8 +61,6 @@ jobs:
         env:
           EVENT_CONTEXT: ${{ toJSON(github.event) }}
         run: echo "$EVENT_CONTEXT"
-      # Checking out the repo
-      - run: git fetch --all --tags
       # Use version-check to extract version from Cargo.toml if no tag is provided
       - name: Extract version from Cargo.toml
         id: version_check
@@ -81,18 +79,20 @@ jobs:
             TAG="${{ steps.version_check.outputs.releaseVersion }}"
           fi
 
-          # Clean the tag (strip leading v if present)
+          # Check if tag contains 'v' followed by a version number
           if [[ "$TAG" =~ v([0-9]+\.[0-9]+\.[0-9]+.*) ]]; then
+            # Extract just the semver portion (everything after 'v')
             CLEAN_TAG=$(echo "$TAG" | sed -E 's/.*v([0-9]+\.[0-9]+\.[0-9]+.*)/\1/')
             echo "Converted tag from $TAG to $CLEAN_TAG"
           else
+            # Keep tag as is (might already be semver or 'latest')
             CLEAN_TAG="$TAG"
             echo "Using tag as is: $TAG"
           fi
 
           SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "clean_tag=$CLEAN_TAG" >> $GITHUB_OUTPUT
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "clean_tag=$CLEAN_TAG" >> $GITHUB_OUTPUT
       - uses: depot/setup-action@v1
       - name: Login to Docker Hub
         # INFRA-APR-25: Temporary update to allow this step to run for pull requests from forked repositories
