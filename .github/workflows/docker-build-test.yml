@@ -55,6 +55,7 @@ jobs:
       binary-name: auctioneer
       tag: ${{ inputs.tag }}
       force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'auctioneer' }}
+      # Add suffix for test images
       image-suffix: release-test
     secrets: inherit
 
@@ -72,6 +73,7 @@ jobs:
       binary-name: composer
       tag: ${{ inputs.tag }}
       force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'composer' }}
+      # Add suffix for test images
       image-suffix: release-test
     secrets: inherit
 
@@ -89,6 +91,7 @@ jobs:
       binary-name: conductor
       tag: ${{ inputs.tag }}
       force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'conductor' }}
+      # Add suffix for test images
       image-suffix: release-test
     secrets: inherit
 
@@ -105,7 +108,8 @@ jobs:
       package-name: sequencer
       binary-name: sequencer
       tag: ${{ inputs.tag }}
-      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'sequencer' }}
+      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'sequencer' }} =
+      # Add suffix for test images
       image-suffix: release-test
     secrets: inherit
 
@@ -123,6 +127,7 @@ jobs:
       binary-name: sequencer-relayer
       tag: ${{ inputs.tag }}
       force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'sequencer-relayer' }}
+      # Add suffix for test images
       image-suffix: release-test
     secrets: inherit
 
@@ -140,6 +145,7 @@ jobs:
       binary-name: bridge-withdrawer
       tag: ${{ inputs.tag }}
       force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'evm-bridge-withdrawer' }}
+      # Add suffix for test images
       image-suffix: release-test
     secrets: inherit
 
@@ -157,6 +163,7 @@ jobs:
       binary-name: cli
       tag: ${{ inputs.tag }}
       force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'cli' }}
+      # Add suffix for test images
       image-suffix: release-test
     secrets: inherit
 
