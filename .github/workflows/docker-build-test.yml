@@ -41,9 +41,24 @@ jobs:
   run_checker:
     uses: ./.github/workflows/reusable-run-checker.yml
 
-  auctioneer:
-    needs: run_checker
+  auctioneer-version:
     if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'auctioneer')
+    needs: run_checker
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release_version.outputs.releaseVersion }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: git fetch --all --tags
+      - name: Check Release Version
+        id: release_version
+        uses: joroshiba/version-check@v2
+        with:
+          file: crates/astria-auctioneer/Cargo.toml
+          failBuild: false
+
+  auctioneer:
+    needs: auctioneer-version
     uses: "./.github/workflows/reusable-docker-build.yml"
     permissions:
       contents: read
@@ -53,7 +68,7 @@ jobs:
       depot-project-id: 0q41v32h7j
       package-name: auctioneer
       binary-name: auctioneer
-      tag: ${{ inputs.tag }}
+      tag: ${{ inputs.tag || needs.auctioneer-version.outputs.version }}
       force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'auctioneer' }}
       # Add suffix for test images
       image-suffix: release-test
