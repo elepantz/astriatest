@@ -67,7 +67,7 @@ jobs:
         if: inputs.tag == ''
         uses: joroshiba/version-check@v2
         with:
-          file: crates/astria-${{ inputs.package-name }}/Cargo.toml
+          file: crates/astria-${{ inputs.binary-name }}/Cargo.toml
           failBuild: false
       - name: Process tag
         id: process_tag
