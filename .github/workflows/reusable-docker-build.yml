@@ -118,20 +118,20 @@ jobs:
             # Turn off auto-tagging for latest and do it manually below in tags
             latest=false
           tags: |
-            # PR builds tag with pr-num AND set the actual commit SHA from the PR head instead of from the PR merge commit (alternatively, we could checkout the PR head in actions/checkout)
+            # PR builds tag with pr-num AND set the full commit SHA from the PR head
             type=ref,event=pr
             type=raw,value=sha-${{ github.event.pull_request.head.sha || github.sha }},enable=${{ startsWith(env.FULL_REF, 'refs/pull/') }}
 
-            # Main branch builds: latest and main-sha
+            # Main branch builds: latest, sha-github.sha and major.minor.patch-github.sha
             type=raw,value=latest,enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
             type=raw,value=sha-${{ github.sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
-            type=raw,value=main-${{ steps.process_tag.outputs.short_sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
+            type=raw,value=${{ steps.process_tag.outputs.clean_tag }}-${{ steps.process_tag.outputs.short_sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
 
             # Release builds. Semver and match with version
             type=match,pattern=refs/tags/${{ inputs.binary-name }}-v(.*),group=1,enable=${{ startsWith(env.FULL_REF, 'refs/tags/') }},value=${{ env.FULL_REF }}
             type=semver,pattern={{version}}-${{ steps.process_tag.outputs.short_sha }},enable=${{ startsWith(env.FULL_REF, 'refs/tags/') && contains(env.FULL_REF, '-v') }}
 
-            # Support direct version input via inputs.tag
+            # Support direct version input via inputs.tag-short_sha (e.g. 0.1.0-1234567)
             type=raw,value=${{ steps.process_tag.outputs.clean_tag }}-${{ steps.process_tag.outputs.short_sha }},enable=${{ inputs.tag != '' && !startsWith(inputs.tag, 'refs/')}}
 
       - name: Build and push
