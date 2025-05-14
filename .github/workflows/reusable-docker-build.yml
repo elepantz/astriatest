@@ -28,6 +28,9 @@ on:
         type: string
         default: ""
         required: false
+      debug:
+        type: boolean
+        default: false
     secrets:
       DOCKER_TOKEN:
         required: false
@@ -50,17 +53,16 @@ jobs:
       packages: write
     if: inputs.force || startsWith(inputs.tag, inputs.binary-name) || !inputs.tag && (startsWith(github.ref, format('refs/tags/{0}-v', inputs.binary-name)) || github.ref == 'refs/heads/main' || github.event_name == 'pull_request' || github.event_name == 'merge_group')
     steps:
+      # Checking out the repo
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.tag }}
           submodules: 'true'
       - name: Dump GitHub context
+        if: inputs.debug
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
         run: echo "$GITHUB_CONTEXT"
-      - name: Dump event context
-        env:
-          EVENT_CONTEXT: ${{ toJSON(github.event) }}
-        run: echo "$EVENT_CONTEXT"
       # Use version-check to extract version from Cargo.toml if no tag is provided
       - name: Extract version from Cargo.toml
         id: version_check
@@ -69,30 +71,11 @@ jobs:
         with:
           file: crates/astria-${{ inputs.binary-name }}/Cargo.toml
           failBuild: false
-      - name: Process tag
-        id: process_tag
+      - name: Generate short commit SHA
+        id: short_sha
         run: |
-          # Determine the tag to use
-          if [ "${{ inputs.tag }}" != "" ]; then
-            TAG="${{ inputs.tag }}"
-          else
-            TAG="${{ steps.version_check.outputs.releaseVersion }}"
-          fi
-
-          # Check if tag contains 'v' followed by a version number
-          if [[ "$TAG" =~ v([0-9]+\.[0-9]+\.[0-9]+.*) ]]; then
-            # Extract just the semver portion (everything after 'v')
-            CLEAN_TAG=$(echo "$TAG" | sed -E 's/.*v([0-9]+\.[0-9]+\.[0-9]+.*)/\1/')
-            echo "Converted tag from $TAG to $CLEAN_TAG"
-          else
-            # Keep tag as is (might already be semver or 'latest')
-            CLEAN_TAG="$TAG"
-            echo "Using tag as is: $TAG"
-          fi
-
           SHORT_SHA=$(git rev-parse --short HEAD)
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-          echo "clean_tag=$CLEAN_TAG" >> $GITHUB_OUTPUT
       - uses: depot/setup-action@v1
       - name: Login to Docker Hub
         # INFRA-APR-25: Temporary update to allow this step to run for pull requests from forked repositories
@@ -112,7 +95,6 @@ jobs:
         id: metadata
         uses: docker/metadata-action@v4
         with:
-          # INFRA-MAR-25: Modify package name to include image suffix if exists
           images: ${{ format('{0}/{1}/{2}', env.REGISTRY, env.REPO_ORG, env.PACKAGE_NAME) }}
           flavor: |
             # Turn off auto-tagging for latest and do it manually below in tags
