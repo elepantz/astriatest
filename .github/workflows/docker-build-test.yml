@@ -188,21 +188,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # ⚠️ TEMPORARY: Test steps disabled due to unknown failures on GitHub Action runners
-      # TODO: Re-enable these test steps before merging to main
-      # - name: Setup Smoke Test Environment
-      #   timeout-minutes: 10
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just deploy cluster
-      #     kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-      #     echo -e "\n\nDeploying with astria images tagged $TAG"
-      #     just deploy smoke-test $TAG
-      # - name: Run Smoke test
-      #   timeout-minutes: 3
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just run-smoke-test $TAG
+      - name: Setup Smoke Test Environment
+        timeout-minutes: 10
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just deploy cluster
+          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
+          echo -e "\n\nDeploying with astria images tagged $TAG"
+          just deploy smoke-test $TAG
+      - name: Run Smoke test
+        timeout-minutes: 3
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just run-smoke-test $TAG
       - name: Skip Smoke Test (Temporarily Disabled)
         run: echo "Smoke test temporarily disabled"
 
@@ -227,21 +225,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # ⚠️ TEMPORARY: Test steps disabled due to unknown failures on GitHub Action runners
-      # TODO: Re-enable these test steps before merging to main
-      # - name: Setup Smoke Test Environment
-      #   timeout-minutes: 5
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just deploy cluster
-      #     kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-      #     echo -e "\n\nDeploying with astria images tagged $TAG"
-      #     just deploy smoke-cli $TAG
-      # - name: Run Smoke test
-      #   timeout-minutes: 3
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just run-smoke-cli $TAG
+      - name: Setup Smoke Test Environment
+        timeout-minutes: 5
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just deploy cluster
+          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
+          echo -e "\n\nDeploying with astria images tagged $TAG"
+          just deploy smoke-cli $TAG
+      - name: Run Smoke test
+        timeout-minutes: 3
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just run-smoke-cli $TAG
       - name: Skip Smoke CLI Test (Temporarily Disabled)
         run: echo "Smoke CLI test temporarily disabled"
 
@@ -266,21 +262,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # ⚠️ TEMPORARY: Test steps disabled due to unknown failures on GitHub Action runners
-      # TODO: Re-enable these test steps before merging to main
-      # - name: Setup IBC Bridge Test Environment
-      #   timeout-minutes: 8
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just deploy cluster
-      #     kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-      #     echo -e "\n\nDeploying with astria images tagged $TAG"
-      #     just deploy ibc-test $TAG
-      # - name: Run IBC ICS20 Transfer test
-      #   timeout-minutes: 3
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just run ibc-test default $TAG
+      - name: Setup IBC Bridge Test Environment
+        timeout-minutes: 8
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just deploy cluster
+          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
+          echo -e "\n\nDeploying with astria images tagged $TAG"
+          just deploy ibc-test $TAG
+      - name: Run IBC ICS20 Transfer test
+        timeout-minutes: 3
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just run ibc-test default $TAG
       - name: Skip IBC Bridge Test (Temporarily Disabled)
         run: echo "IBC Bridge test temporarily disabled"
 
@@ -305,21 +299,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # ⚠️ TEMPORARY: Test steps disabled due to unknown failures on GitHub Action runners
-      # TODO: Re-enable these test steps before merging to main
-      # - name: Setup IBC Bridge Test Environment
-      #   timeout-minutes: 8
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just deploy cluster
-      #     kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-      #     echo -e "\n\nDeploying with astria images tagged $TAG"
-      #     just deploy ibc-test-without-native $TAG
-      # - name: Run IBC utia as native test
-      #   timeout-minutes: 3
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just run ibc-test without-native $TAG
+      - name: Setup IBC Bridge Test Environment
+        timeout-minutes: 8
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just deploy cluster
+          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
+          echo -e "\n\nDeploying with astria images tagged $TAG"
+          just deploy ibc-test-without-native $TAG
+      - name: Run IBC utia as native test
+        timeout-minutes: 3
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just run ibc-test without-native $TAG
       - name: Skip IBC No Native Asset Test (Temporarily Disabled)
         run: echo "IBC No Native Asset test temporarily disabled"
 
@@ -344,21 +336,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # ⚠️ TEMPORARY: Test steps disabled due to unknown failures on GitHub Action runners
-      # TODO: Re-enable these test steps before merging to main
-      # - name: Setup IBC Bridge Test Environment
-      #   timeout-minutes: 8
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just deploy cluster
-      #     kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-      #     echo -e "\n\nDeploying with astria images tagged $TAG"
-      #     just deploy ibc-test-timeout-refund $TAG
-      # - name: Run IBC ICS20 Transfer test
-      #   timeout-minutes: 3
-      #   run: |
-      #     TAG=sha-$(git rev-parse --short HEAD)
-      #     just run ibc-test timeout-refund $TAG
+      - name: Setup IBC Bridge Test Environment
+        timeout-minutes: 8
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just deploy cluster
+          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
+          echo -e "\n\nDeploying with astria images tagged $TAG"
+          just deploy ibc-test-timeout-refund $TAG
+      - name: Run IBC ICS20 Transfer test
+        timeout-minutes: 3
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just run ibc-test timeout-refund $TAG
       - name: Skip IBC Timeout Refund Test (Temporarily Disabled)
         run: echo "IBC Timeout Refund test temporarily disabled"
 
