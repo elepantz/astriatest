@@ -111,7 +111,7 @@ jobs:
             # Main branch builds: latest, full commit SHA AND major.minor.patch-full commit SHA
             type=raw,value=latest,enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
             type=raw,value=sha-${{ github.sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
-            type=raw,value=${{ steps.version_check.outputs.releaseVersion }}-${{ steps.short_sha.outputs.short_sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
+            type=raw,value=${{ steps.version_check.outputs.releaseVersion }}-dev.${{ steps.short_sha.outputs.short_sha }},enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
 
             # Release builds: tag with semver and match with version
             type=match,pattern=refs/tags/${{ inputs.binary-name }}-v(.*),group=1,enable=${{ startsWith(env.FULL_REF, 'refs/tags/') }},value=${{ env.FULL_REF }}
