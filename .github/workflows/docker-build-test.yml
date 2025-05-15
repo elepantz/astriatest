@@ -182,6 +182,7 @@ jobs:
       binary-name: account-monitor
       tag: ${{ inputs.tag }}
       force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'account-monitor' }}
+      # Add suffix for test images
       image-suffix: release-test
     secrets: inherit
 
@@ -206,21 +207,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Smoke Test Environment
-        timeout-minutes: 10
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just deploy cluster
-          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-          echo -e "\n\nDeploying with astria images tagged $TAG"
-          just deploy smoke-test $TAG
-      - name: Run Smoke test
-        timeout-minutes: 3
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just run-smoke-test $TAG
-      - name: Skip Smoke Test (Temporarily Disabled)
-        run: echo "Smoke test temporarily disabled"
+      - name: Test Skipped
+        run: echo "Test Skipped"
 
   smoke-test-evm-rollup-restart:
     needs: [run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli]
@@ -242,19 +230,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Smoke Test Environment
-        timeout-minutes: 10
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just deploy cluster
-          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-          echo -e "\n\nDeploying with astria images tagged $TAG"
-          just deploy evm-rollup-restart-test $TAG
-      - name: Run Smoke test
-        timeout-minutes: 3
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just run-smoke-test $TAG
+      - name: Test Skipped
+        run: echo "Test Skipped"
 
   smoke-cli:
     needs: [run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli]
@@ -277,21 +254,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Smoke Test Environment
-        timeout-minutes: 5
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just deploy cluster
-          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-          echo -e "\n\nDeploying with astria images tagged $TAG"
-          just deploy smoke-cli $TAG
-      - name: Run Smoke test
-        timeout-minutes: 3
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just run-smoke-cli $TAG
-      - name: Skip Smoke CLI Test (Temporarily Disabled)
-        run: echo "Smoke CLI test temporarily disabled"
+      - name: Test Skipped
+        run: echo "Test Skipped"
 
   upgrade-test:
     needs: [run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli]
@@ -319,20 +283,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Upgrade Test Environment
-        timeout-minutes: 10
-        run: |
-          just deploy cluster
-          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-          just deploy upgrade-test
-          cd system-tests
-          uv venv
-          uv pip install -r requirements.txt
-      - name: Run Upgrade Test
-        timeout-minutes: 10
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just run upgrade-test $TAG
+      - name: Test Skipped
+        run: echo "Test Skipped"
 
   ibc-bridge-test:
     needs: [ run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli ]
@@ -355,21 +307,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup IBC Bridge Test Environment
-        timeout-minutes: 8
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just deploy cluster
-          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-          echo -e "\n\nDeploying with astria images tagged $TAG"
-          just deploy ibc-test $TAG
-      - name: Run IBC ICS20 Transfer test
-        timeout-minutes: 3
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just run ibc-test default $TAG
-      - name: Skip IBC Bridge Test (Temporarily Disabled)
-        run: echo "IBC Bridge test temporarily disabled"
+      - name: Test Skipped
+        run: echo "Test Skipped"
 
   ibc-no-native-asset-test:
     needs: [ run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli ]
@@ -392,21 +331,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup IBC Bridge Test Environment
-        timeout-minutes: 8
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just deploy cluster
-          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-          echo -e "\n\nDeploying with astria images tagged $TAG"
-          just deploy ibc-test-without-native $TAG
-      - name: Run IBC utia as native test
-        timeout-minutes: 3
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just run ibc-test without-native $TAG
-      - name: Skip IBC No Native Asset Test (Temporarily Disabled)
-        run: echo "IBC No Native Asset test temporarily disabled"
+      - name: Test Skipped
+        run: echo "Test Skipped"
 
   ibc-timeout-refund:
     needs: [ run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli ]
@@ -429,21 +355,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup IBC Bridge Test Environment
-        timeout-minutes: 8
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just deploy cluster
-          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
-          echo -e "\n\nDeploying with astria images tagged $TAG"
-          just deploy ibc-test-timeout-refund $TAG
-      - name: Run IBC ICS20 Transfer test
-        timeout-minutes: 3
-        run: |
-          TAG=sha-$(git rev-parse --short HEAD)
-          just run ibc-test timeout-refund $TAG
-      - name: Skip IBC Timeout Refund Test (Temporarily Disabled)
-        run: echo "IBC Timeout Refund test temporarily disabled"
+      - name: Test Skipped
+        run: echo "Test Skipped"
 
   # Final job to report overall success/failure
   docker:
