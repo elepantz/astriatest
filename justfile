@@ -10,8 +10,6 @@ mod kubetail 'dev/just/kubetail.just'
 mod argo 'dev/just/argo.just'
 # Helm usage. 'just --list helm' for more...
 mod helm 'dev/just/helm.just'
-# Release management. 'just --list release' for more...
-mod release 'charts/just/release.just'
 
 _default:
   @just --list
