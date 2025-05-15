@@ -21,6 +21,7 @@ on:
           - sequencer-relayer
           - evm-bridge-withdrawer
           - cli
+          - account-monitor
   merge_group:
   push:
     branches:
@@ -167,6 +168,23 @@ jobs:
       image-suffix: release-test
     secrets: inherit
 
+  account-monitor:
+    needs: run_checker
+    if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'account-monitor')
+    uses: "./.github/workflows/reusable-docker-build.yml"
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    with:
+      depot-project-id: 0q41v32h7j
+      package-name: account-monitor
+      binary-name: account-monitor
+      tag: ${{ inputs.tag }}
+      force: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'account-monitor' }}
+      image-suffix: release-test
+    secrets: inherit
+
   smoke-test:
     needs: [run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli]
     # TODO: (flip this back when merge to main repo) github.event.pull_request.head.repo.fork == false) &&
@@ -204,6 +222,40 @@ jobs:
       - name: Skip Smoke Test (Temporarily Disabled)
         run: echo "Smoke test temporarily disabled"
 
+  smoke-test-evm-rollup-restart:
+    needs: [run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli]
+    if: |
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == true) &&
+      (github.event_name == 'merge_group' || needs.run_checker.outputs.run_docker == 'true')
+    runs-on: buildjet-8vcpu-ubuntu-2204
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install just
+        uses: taiki-e/install-action@just
+      - name: Install kind
+        uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Smoke Test Environment
+        timeout-minutes: 10
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just deploy cluster
+          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
+          echo -e "\n\nDeploying with astria images tagged $TAG"
+          just deploy evm-rollup-restart-test $TAG
+      - name: Run Smoke test
+        timeout-minutes: 3
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just run-smoke-test $TAG
+
   smoke-cli:
     needs: [run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli]
     # TODO: (flip this back when merge to main repo) github.event.pull_request.head.repo.fork == false) &&
@@ -240,6 +292,47 @@ jobs:
           just run-smoke-cli $TAG
       - name: Skip Smoke CLI Test (Temporarily Disabled)
         run: echo "Smoke CLI test temporarily disabled"
+
+  upgrade-test:
+    needs: [run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli]
+    if: |
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == true) &&
+      (github.event_name == 'merge_group' || needs.run_checker.outputs.run_docker == 'true')
+    runs-on: depot-ubuntu-24.04-8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install just
+        uses: taiki-e/install-action@just
+      - name: Install kind
+        uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          version: "1.50.1"
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Upgrade Test Environment
+        timeout-minutes: 10
+        run: |
+          just deploy cluster
+          kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
+          just deploy upgrade-test
+          cd system-tests
+          uv venv
+          uv pip install -r requirements.txt
+      - name: Run Upgrade Test
+        timeout-minutes: 10
+        run: |
+          TAG=sha-$(git rev-parse --short HEAD)
+          just run upgrade-test $TAG
 
   ibc-bridge-test:
     needs: [ run_checker, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli ]
@@ -355,7 +448,7 @@ jobs:
   # Final job to report overall success/failure
   docker:
     if: ${{ always() && !cancelled() }}
-    needs: [auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund]
+    needs: [auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-test-evm-rollup-restart, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund, upgrade-test]
     uses: ./.github/workflows/reusable-success.yml
     with:
       success: ${{ !contains(needs.*.result, 'failure') }}
