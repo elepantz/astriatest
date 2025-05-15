@@ -361,7 +361,7 @@ jobs:
   # Final job to report overall success/failure
   docker:
     if: ${{ always() && !cancelled() }}
-    needs: [auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-test-evm-rollup-restart, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund, upgrade-test]
+    needs: [account-monitor, auctioneer, composer, conductor, sequencer, sequencer-relayer, evm-bridge-withdrawer, cli, smoke-test, smoke-cli, ibc-bridge-test, ibc-no-native-asset-test, ibc-timeout-refund, upgrade-test]
     uses: ./.github/workflows/reusable-success.yml
     with:
       success: ${{ !contains(needs.*.result, 'failure') }}
