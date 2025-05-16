@@ -36,6 +36,9 @@ on:
       run_release_charts:
         description: If release for charts needs to be run, will be 'true'
         value: ${{ github.event_name != 'pull_request' && (jobs.changes.outputs.release_workflow == 'true' || jobs.changes.outputs.charts == 'true') }}
+      run_release_please:
+        description: If release for release please needs to be run, will be 'true'
+        value: ${{ github.event_name != 'pull_request' || jobs.changes.outputs.release_please_workflow == 'true' || jobs.changes.outputs.crates == 'true' }}
 
 
 jobs:
@@ -45,6 +48,7 @@ jobs:
       pull-requests: read
     outputs:
       release_workflow: ${{ steps.filters.outputs.release_workflow }}
+      release_please_workflow: ${{ steps.filters.outputs.release_please_workflow }}
       test_workflow: ${{ steps.filters.outputs.test_workflow }}
       docker_workflow: ${{ steps.filters.outputs.docker_workflow }}
       lint_workflow: ${{ steps.filters.outputs.lint_workflow }}
@@ -69,10 +73,12 @@ jobs:
               - 'dev/**'
               - *charts
             release_workflow:
+              - '.github/workflows/release.yml'
+              - '.github/workflows/reusable-cargo-version.yml'
+            release_please_workflow:
               - '.github/workflows/release-please.yml'
               - '.release-please-config.json'
               - '.release-please-manifest.json'
-              - '.github/workflows/reusable-cargo-version.yml'
             test_workflow:
               - '.github/workflows/test.yml'
             docker_workflow:
