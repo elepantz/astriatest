@@ -69,7 +69,9 @@ jobs:
               - 'dev/**'
               - *charts
             release_workflow:
-              - '.github/workflows/release.yml'
+              - '.github/workflows/release-please.yml'
+              - '.release-please-config.json'
+              - '.release-please-manifest.json'
               - '.github/workflows/reusable-cargo-version.yml'
             test_workflow:
               - '.github/workflows/test.yml'

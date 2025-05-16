@@ -4,29 +4,19 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'crates/**'
-      - 'charts/**'
-      - '.release-please-config.json'
-      - '.release-please-manifest.json'
-  # SKIP FOR NOW
-  # workflow_run:
-  #   workflows: ["Docker Build Test"]
-  #   types:
-  #     - completed
-
 
 permissions:
   contents: write
   pull-requests: write
   issues: write
 
-
 jobs:
+  run_checker:
+    uses: ./.github/workflows/reusable-run-checker.yml
   release-please:
-    # SKIP FOR NOW
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    needs: run_checker
+    if: ${{ needs.run_checker.outputs.run_release_services == 'true' }}
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
       paths_released: ${{ steps.release.outputs.paths_released }}
@@ -52,6 +42,75 @@ jobs:
           script: |
             console.log('Release Please Action Outputs:');
             console.log('---------------------------');
+            console.log('Release Outputs:', '${{ steps.release.outputs }}');
             console.log('Releases Created:', '${{ steps.release.outputs.releases_created }}');
             console.log('Paths Released:', '${{ steps.release.outputs.paths_released }}');
             console.log('PRs Created:', '${{ steps.release.outputs.prs }}');
+  ## The following jobs are copied from release.yml
+  ## and are used to release the proto and charts.
+  proto:
+    runs-on: ubuntu-latest
+    environment: BUF
+    needs: run_checker
+    if: |
+      github.event_name != 'merge_group' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) &&
+      ${{ needs.run_checker.outputs.run_release_proto }} == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: "1.32.0"
+          github_token: ${{ github.token }}
+      - name: "Get Buf Branch Annotation"
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "buf_repo_ending=${{ github.event.number }}/merge" >> $GITHUB_ENV
+          else
+            echo "buf_repo_ending=main" >> $GITHUB_ENV
+          fi
+      # ⚠️ TEMPORARY: BUF token upload disabled for testing
+      # TODO: Re-enable before merging to main
+      # - name: "Upload all Protos"
+      #   uses: bufbuild/buf-push-action@v1
+      #   with:
+      #     draft: ${{ github.ref_name != 'main'}}
+      #     buf_token: ${{ secrets.BUF_TOKEN }}
+      - name: "Skip BUF Upload (Temporarily Disabled)"
+        run: echo "BUF token upload temporarily disabled"
+
+  # Add charts job from release.yml
+  charts:
+    env:
+      REPO_NAME: astriaorg/astria-release-test
+      CHARTS_REPO: astriaorg/charts-release-test
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: github.ref_name == 'main' && ${{ needs.release-please.outputs.releases_created == 'true' }}
+    steps:
+      - name: Checkout Mono Repo
+        uses: actions/checkout@v4
+        with:
+          path: 'mono'
+      - name: Checkout Charts Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CHARTS_REPO }}
+          ref: 'main'
+          path: 'charts'
+          token: ${{ secrets.CHARTS_REPO_TOKEN }}
+      - name: Copy Updates to Charts Repo
+        run: |
+          rsync -a --delete mono/charts/ charts/charts/ --exclude=charts/README.md
+          rsync -a --delete mono/charts/README.md charts/README.md
+          rsync -a --delete mono/dev/ charts/dev/
+      - name: Publish to Charts Repo
+        run: |
+          cd charts
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+          git add .
+          git commit -m "Changes from ${{ env.REPO_NAME }}@${{ github.sha }}"
+          git push
