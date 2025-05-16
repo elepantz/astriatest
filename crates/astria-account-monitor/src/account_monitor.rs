@@ -257,6 +257,7 @@ struct AccountInfo {
     balance: QueryResponse<u128>,
 }
 
+// Implement Display for QueryResponse
 impl<T: Display> Display for QueryResponse<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {

@@ -10,6 +10,11 @@
       "component": "cli",
       "package-name": "astria-cli"
     },
+    "crates/astria-account-monitor": {
+      "release-type": "rust",
+      "component": "account-monitor",
+      "package-name": "astria-account-monitor"
+    },
     "crates/astria-conductor": {
       "release-type": "rust",
       "component": "conductor",
