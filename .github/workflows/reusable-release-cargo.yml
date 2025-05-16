@@ -1,3 +1,11 @@
+## Update: May 2025. This workflow is deprecated.
+## We are now using release-please to manage Cargo releases.
+## See .github/workflows/release-please.yml for the new workflow.
+
+## This workflow is used to release a new version of a Cargo package.
+## It is designed to be used in a matrix build to release multiple packages
+## at once.
+
 name: Reusable Cargo Version Check
 
 on:
