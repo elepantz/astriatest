@@ -9,6 +9,10 @@ on:
       - 'charts/**'
       - '.release-please-config.json'
       - '.release-please-manifest.json'
+  workflow_run:
+    workflows: ["Docker Build Test"]
+    types:
+      - completed
 
 
 permissions:
@@ -19,6 +23,7 @@ permissions:
 
 jobs:
   release-please:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
