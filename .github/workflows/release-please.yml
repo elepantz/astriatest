@@ -4,22 +4,39 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'crates/**'
+      - 'charts/**'
+      - '.release-please-config.json'
+      - '.release-please-manifest.json'
+
 
 permissions:
   contents: write
   pull-requests: write
   issues: write
 
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      paths_released: ${{ steps.release.outputs.paths_released }}
     steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Debug release outputs
         if: ${{ steps.release.outputs.releases_created }}
         uses: actions/github-script@v6

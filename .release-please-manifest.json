@@ -1,9 +1,1 @@
-{
-  "crates/astria-cli": "0.6.0",
-  "crates/astria-conductor": "1.1.0",
-  "crates/astria-composer": "1.0.1",
-  "crates/astria-sequencer": "2.0.0",
-  "crates/astria-sequencer-relayer": "1.0.1",
-  "crates/astria-bridge-withdrawer": "1.0.2",
-  "crates/astria-auctioneer": "0.0.1"
-  }
+{}

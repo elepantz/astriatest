@@ -1,114 +1,44 @@
 {
-    "packages": {
-        "crates/astria-cli": {
-            "component": "cli",
-            "release-type": "rust",
-            "tag-separator": "-v",
-            "package-name": "astria-cli",
-            "changelog-path": "CHANGELOG.md",
-            "bump-minor-pre-major": true,
-            "bump-patch-for-minor-pre-major": true
-        },
-        "crates/astria-conductor": {
-            "component": "conductor",
-            "release-type": "rust",
-            "tag-separator": "-v",
-            "package-name": "astria-conductor",
-            "changelog-path": "CHANGELOG.md",
-            "bump-minor-pre-major": true,
-            "bump-patch-for-minor-pre-major": true
-        },
-        "crates/astria-composer": {
-            "component": "composer",
-            "release-type": "rust",
-            "tag-separator": "-v",
-            "package-name": "astria-composer",
-            "changelog-path": "CHANGELOG.md",
-            "bump-minor-pre-major": true,
-            "bump-patch-for-minor-pre-major": true
-        },
-        "crates/astria-sequencer": {
-            "component": "sequencer",
-            "release-type": "rust",
-            "tag-separator": "-v",
-            "package-name": "astria-sequencer",
-            "changelog-path": "CHANGELOG.md",
-            "bump-minor-pre-major": true,
-            "bump-patch-for-minor-pre-major": true
-        },
-        "crates/astria-sequencer-relayer": {
-            "component": "sequencer-relayer",
-            "release-type": "rust",
-            "tag-separator": "-v",
-            "package-name": "astria-sequencer-relayer",
-            "changelog-path": "CHANGELOG.md",
-            "bump-minor-pre-major": true,
-            "bump-patch-for-minor-pre-major": true
-        },
-        "crates/astria-bridge-withdrawer": {
-            "component": "bridge-withdrawer",
-            "release-type": "rust",
-            "tag-separator": "-v",
-            "package-name": "astria-bridge-withdrawer",
-            "changelog-path": "CHANGELOG.md",
-            "bump-minor-pre-major": true,
-            "bump-patch-for-minor-pre-major": true
-        },
-        "crates/astria-auctioneer": {
-            "component": "auctioneer",
-            "release-type": "rust",
-            "tag-separator": "-v",
-            "package-name": "astria-auctioneer",
-            "changelog-path": "CHANGELOG.md",
-            "bump-minor-pre-major": true,
-            "bump-patch-for-minor-pre-major": true
-        }
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-search-depth": 10,
+  "commit-search-depth": 50,
+  "include-v-in-tag": true,
+  "separate-pull-requests": true,
+  "packages": {
+    "crates/astria-cli": {
+      "release-type": "rust",
+      "component": "cli",
+      "package-name": "astria-cli"
     },
-    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-    "plugins": [
-        "cargo-workspace"
-    ],
-    "bump-minor-pre-major": true,
-    "bump-patch-for-minor-pre-major": true,
-    "release-type": "rust",
-    "include-component-in-tag": true,
-    "tag-separator": "-v",
-    "changelog-sections": [
-        {
-            "type": "feat",
-            "section": "Features",
-            "hidden": false
-        },
-        {
-            "type": "fix",
-            "section": "Bug Fixes",
-            "hidden": false
-        },
-        {
-            "type": "chore",
-            "section": "Miscellaneous",
-            "hidden": false
-        },
-        {
-            "type": "refactor",
-            "section": "Code Refactoring",
-            "hidden": false
-        },
-        {
-            "type": "docs",
-            "section": "Documentation",
-            "hidden": false
-        },
-        {
-            "type": "perf",
-            "section": "Performance Improvements",
-            "hidden": false
-        },
-        {
-            "type": "test",
-            "section": "Tests",
-            "hidden": false
-        }
-    ],
-    "separate-pull-requests": false
+    "crates/astria-conductor": {
+      "release-type": "rust",
+      "component": "conductor",
+      "package-name": "astria-conductor"
+    },
+    "crates/astria-composer": {
+      "release-type": "rust",
+      "component": "composer",
+      "package-name": "astria-composer"
+    },
+    "crates/astria-sequencer": {
+      "release-type": "rust",
+      "component": "sequencer",
+      "package-name": "astria-sequencer"
+    },
+    "crates/astria-sequencer-relayer": {
+      "release-type": "rust",
+      "component": "sequencer-relayer",
+      "package-name": "astria-sequencer-relayer"
+    },
+    "crates/astria-bridge-withdrawer": {
+      "release-type": "rust",
+      "component": "bridge-withdrawer",
+      "package-name": "astria-bridge-withdrawer"
+    },
+    "crates/astria-auctioneer": {
+      "release-type": "rust",
+      "component": "auctioneer",
+      "package-name": "astria-auctioneer"
+    }
+  }
 }
