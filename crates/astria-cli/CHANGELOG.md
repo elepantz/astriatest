@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2](https://github.com/elepantz/astriatest/compare/cli-v0.6.1...cli-v0.6.2) (2025-05-19)
+
+
+### Bug Fixes
+
+* **cli:** added more comments ([#36](https://github.com/elepantz/astriatest/issues/36)) ([ec95d87](https://github.com/elepantz/astriatest/commit/ec95d8704f992b3ca493d50bc7d97d8b88061696))
+* **cli:** added some comments ([#30](https://github.com/elepantz/astriatest/issues/30)) ([fb46a32](https://github.com/elepantz/astriatest/commit/fb46a320fff67d204c1cf7d9e61526e4b30ac675))
+
 ## [0.6.1](https://github.com/astriaorg/astria-release-test/compare/cli-v0.6.0...cli-v0.6.1) (2025-05-16)
 
 
